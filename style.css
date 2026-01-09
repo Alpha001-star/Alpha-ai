@@ -122,39 +122,3 @@ body {
 #send-btn:hover {
   background: #0056b3;
 }
-/* Existing chat-box should stay the same, but ensure it has flex-direction: column */
-.chat-box {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  background-color: #f9f9fb;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Common message styles */
-.message {
-  max-width: 80%;
-  padding: 12px 16px;
-  font-size: 14px;
-  line-height: 1.4;
-  position: relative;
-}
-
-/* AI Response (Left Side) */
-.bot-message {
-  align-self: flex-start;
-  background-color: #e9ecef;
-  color: #333;
-  border-radius: 18px 18px 18px 4px;
-}
-
-/* User Response (Right Side) */
-.user-message {
-  align-self: flex-end;
-  background-color: #007bff;
-  color: white;
-  border-radius: 18px 18px 4px 18px;
-  text-align: right;
-}
