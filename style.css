@@ -1,4 +1,4 @@
-/* General Reset */
+/* Reset and Font */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -11,152 +11,114 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
 }
 
-/* Phone Frame */
+/* Phone Container */
 .phone {
-  width: 100%;
-  max-width: 420px;
-  height: 90vh;
+  width: 375px; /* Standard iPhone width */
+  height: 667px; /* Standard iPhone height */
   background: #ffffff;
+  border: 8px solid #333; /* Phone bezel */
   border-radius: 30px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border: 8px solid #222; /* Adds a "hardware" frame look */
   position: relative;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  overflow: hidden; /* Keeps content inside rounded corners */
 }
 
-/* Top Bar */
+/* Header / Top Bar */
 .top-bar {
+  background: #007bff;
+  color: white;
+  padding: 15px;
   display: flex;
   align-items: center;
-  padding: 15px 20px;
-  background: #0a4cff;
-  color: white;
   gap: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .avatar img {
   border-radius: 50%;
   background: white;
-  display: block;
-}
-
-.title {
-  flex: 1;
+  padding: 2px;
 }
 
 .title h1 {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 16px;
+  margin: 0;
 }
 
 .title span {
-  font-size: 0.75rem;
-  opacity: 0.9;
-  display: flex;
-  align-items: center;
+  font-size: 12px;
+  opacity: 0.8;
 }
 
-/* CBT Button in Top Bar */
 .cbt-button {
-  background: #ffcc00;
-  color: #000;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: bold;
+  margin-left: auto;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid white;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-size: 12px;
   cursor: pointer;
-  transition: transform 0.2s;
 }
 
-.cbt-button:hover {
-  transform: scale(1.05);
-  background: #f7c300;
-}
-
-/* Chat Box Area */
+/* Chat Area */
 .chat-box {
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background-color: #f9fbff;
+  background-color: #f9f9fb;
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 10px;
 }
 
-/* Chat Bubbles */
 .message {
   max-width: 80%;
-  padding: 12px 16px;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  position: relative;
+  padding: 12px;
+  border-radius: 15px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .bot-message {
-  align-self: flex-start;
-  background: #eef2ff;
+  background: #e9ecef;
   color: #333;
-  border-radius: 18px 18px 18px 4px;
-  border: 1px solid #d0d7de;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
 }
 
-.user-message {
-  align-self: flex-end;
-  background: #0a4cff;
-  color: white;
-  border-radius: 18px 18px 4px 18px;
-}
-
-/* Input Area at Bottom */
+/* Input Area */
 .input-area {
-  display: flex;
   padding: 15px;
   background: white;
-  border-top: 1px solid #eee;
+  display: flex;
   gap: 10px;
+  border-top: 1px solid #eee;
 }
 
 #user-input {
   flex: 1;
-  padding: 12px 18px;
+  padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 25px;
   outline: none;
-  font-size: 0.95rem;
-  transition: border 0.3s;
-}
-
-#user-input:focus {
-  border-color: #0a4cff;
 }
 
 #send-btn {
-  background: #0a4cff;
+  background: #007bff;
   color: white;
   border: none;
-  padding: 0 20px;
+  padding: 0 15px;
   border-radius: 25px;
-  font-weight: 600;
+  font-weight: bold;
   cursor: pointer;
 }
 
 #send-btn:hover {
-  background: #0037cc;
-}
-
-/* Scrollbar Styling */
-.chat-box::-webkit-scrollbar {
-  width: 4px;
-}
-.chat-box::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 10px;
+  background: #0056b3;
 }
