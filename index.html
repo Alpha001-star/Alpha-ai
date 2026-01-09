@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Alpha Tutors AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="phone">
+    
+    <div class="top-bar">
+      <div class="avatar"><img src="Alpha.png" alt="logo" width="35"></div>
+      <div class="title">
+          <h1>Alpha</h1>
+          <span>• Online</span>
+      </div>
+      <button onclick="window.location.href='cbt.html'" class="cbt-button">CBT Mode</button>
+    </div>
+
+    <div id="chat-box" class="chat-box">
+      <div class="message bot-message">
+        👋 Hi! I’m <strong>Alpha</strong>, your JAMB & Post-UTME tutor.  
+        What subject are you studying today?
+      </div>
+    </div>
+
+    <form id="chat-form" class="input-area">
+      <input type="text" id="user-input" placeholder="Type a message..." required>
+      <button type="submit" id="send-btn">Send</button>
+    </form>
+
+  </div> <script src="script.js"></script>
+</body>
+</html>

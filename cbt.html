@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Alpha CBT Mode</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Custom styles specifically for the Exam UI */
+    .exam-container { flex: 1; padding: 20px; overflow-y: auto; color: #333; }
+    .setup-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .question-card { background: white; padding: 20px; border-radius: 15px; display: none; }
+    .option-btn { 
+        display: block; width: 100%; text-align: left; padding: 12px; 
+        margin: 8px 0; border: 1px solid #dfe1e5; border-radius: 10px; 
+        background: white; cursor: pointer; transition: 0.2s;
+    }
+    .option-btn:hover { background: #f1f3f4; border-color: #1a73e8; }
+    .timer-pill { background: #feeef3; color: #d93025; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="top-bar">
+      <div class="avatar" onclick="window.location.href='index.html'" style="cursor:pointer;">⬅</div>
+      <div class="title">
+        <h1>Alpha CBT Exam</h1>
+        <span id="exam-status">Setup Mode</span>
+      </div>
+      <div class="timer-pill" id="timer-display" style="display:none;">05:00</div>
+    </div>
+
+    <div class="exam-container">
+      <div id="setup-view" class="setup-card">
+        <h2 style="font-size: 1.2rem; margin-bottom: 10px;">Exam Generator</h2>
+        <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">Enter a topic and Alpha will generate a JAMB-standard practice test for you.</p>
+        
+        <input type="text" id="subject-in" placeholder="Subject (e.g. Government)" style="width: 100%; margin-bottom: 10px;">
+        <input type="text" id="topic-in" placeholder="Topic (e.g. Nigerian Federalism)" style="width: 100%; margin-bottom: 20px;">
+        
+        <button id="start-btn" onclick="generateExam()" style="width: 100%; margin: 0; height: 45px;">Generate Questions</button>
+      </div>
+
+      <div id="quiz-view" class="question-card">
+        <p id="q-count" style="font-size: 0.8rem; color: #1a73e8; font-weight: bold; margin-bottom: 5px;">Question 1 of 5</p>
+        <h3 id="q-text" style="font-size: 1.05rem; margin-bottom: 20px; line-height: 1.5;">Question text goes here?</h3>
+        <div id="options-box"></div>
+      </div>
+    </div>
+
+    <div id="quiz-footer" class="input-area" style="display:none;">
+        <button id="next-btn" onclick="nextQuestion()" style="width: 100%; margin: 0;">Next Question</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
+
+const API_KEY = "AIzaSyBuuS9-AdGnVCHe3SLfiCY7QbBswov0fsY"; 
+let currentQuestions = [];
+let currentIndex = 0;
+let userAnswers = [];
+let timerInterval;
+
+window.generateExam = async function() {
+    const sub = document.getElementById('subject-in').value;
+    const top = document.getElementById('topic-in').value;
+    const btn = document.getElementById('start-btn');
+
+    if(!sub || !top) return alert("Please enter both Subject and Topic");
+
+    btn.innerText = "Alpha is connecting...";
+    btn.disabled = true;
+
+    // 2026 STABLE MODEL & URL
+    // We use gemini-2.0-flash which replaced 1.5 in 2025/2026
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+    const promptText = `Generate 5 JAMB UTME questions for ${sub} on the topic: ${top}. 
+    Return ONLY a raw JSON array. Do not include \`\`\`json or any other text.
+    Format: [{"question":"...", "options":["","","",""], "answer":"A"}]`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: promptText }] }]
+                // Note: We removed generationConfig entirely to avoid "Unknown name" errors
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            // If 2.0-flash is not in your region yet, try the 'gemini-pro' alias
+            if(data.error.code === 404) return retryWithGenericModel(sub, top);
+            throw new Error(data.error.message);
+        }
+
+        let aiText = data.candidates[0].content.parts[0].text;
+        
+        // Clean the text manually to ensure it's pure JSON
+        aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
+        
+        currentQuestions = JSON.parse(aiText);
+        userAnswers = new Array(currentQuestions.length).fill(null);
+
+        // UI Transition
+        document.getElementById('setup-view').style.display = 'none';
+        document.getElementById('quiz-view').style.display = 'block';
+        document.getElementById('quiz-footer').style.display = 'flex';
+        document.getElementById('timer-display').style.display = 'block';
+        document.getElementById('exam-status').innerText = sub;
+        
+        startTimer(300); 
+        renderQuestion();
+
+    } catch (err) {
+        console.error("Alpha Debug:", err);
+        alert("Alpha Connection Error: " + err.message);
+        btn.innerText = "Generate Questions";
+        btn.disabled = false;
+    }
+}
+
+// Universal Fallback for any "Not Found" errors
+async function retryWithGenericModel(sub, top) {
+    const btn = document.getElementById('start-btn');
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+    // ... repeat the fetch logic using 'gemini-pro'
+}
+
+// Helper to handle the UI and data
+function processAiData(data, sub) {
+    let aiText = data.candidates[0].content.parts[0].text;
+    aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    currentQuestions = JSON.parse(aiText);
+    userAnswers = new Array(currentQuestions.length).fill(null);
+
+    document.getElementById('setup-view').style.display = 'none';
+    document.getElementById('quiz-view').style.display = 'block';
+    document.getElementById('quiz-footer').style.display = 'flex';
+    document.getElementById('timer-display').style.display = 'block';
+    document.getElementById('exam-status').innerText = sub;
+    
+    startTimer(300); 
+    renderQuestion();
+}
+
+function renderQuestion() {
+    const q = currentQuestions[currentIndex];
+    document.getElementById('q-count').innerText = `Question ${currentIndex + 1} of 5`;
+    document.getElementById('q-text').innerText = q.question;
+    const box = document.getElementById('options-box');
+    box.innerHTML = "";
+    const labels = ["A", "B", "C", "D"];
+    q.options.forEach((opt, i) => {
+        const b = document.createElement('button');
+        b.className = 'option-btn';
+        b.innerText = `${labels[i]}. ${opt}`;
+        if(userAnswers[currentIndex] === labels[i]) {
+            b.style.borderColor = '#1a73e8';
+            b.style.background = '#e8f0fe';
+        }
+        b.onclick = () => {
+            userAnswers[currentIndex] = labels[i];
+            renderQuestion();
+        };
+        box.appendChild(b);
+    });
+}
+
+window.nextQuestion = function() {
+    if(currentIndex < currentQuestions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+        if(currentIndex === 4) document.getElementById('next-btn').innerText = "Finish Exam";
+    } else {
+        clearInterval(timerInterval);
+        showResults();
+    }
+}
+
+function startTimer(duration) {
+    let timer = duration, minutes, seconds;
+    const display = document.getElementById('timer-display');
+    timerInterval = setInterval(function () {
+      minutes = parseInt(timer / 60, 10);
+      seconds = parseInt(timer % 60, 10);
+      display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+      if (--timer < 0) {
+        clearInterval(timerInterval);
+        showResults();
+      }
+    }, 1000);
+}
+
+function showResults() {
+    let score = 0;
+    currentQuestions.forEach((q, i) => { if(userAnswers[i] === q.answer) score++; });
+    const quizView = document.getElementById('quiz-view');
+    document.getElementById('quiz-footer').style.display = 'none';
+    document.getElementById('timer-display').style.display = 'none';
+    document.getElementById('exam-status').innerText = "Results";
+    quizView.innerHTML = `
+      <div style="text-align: center; padding: 20px;">
+        <h2 style="font-size: 2.5rem; color: #1a73e8;">${score}/5</h2>
+        <p style="font-weight: bold; margin-bottom: 20px;">Score: ${(score/5)*100}%</p>
+        <button onclick="window.location.href='index.html'" 
+                style="background: #0a4cff; color: white; padding: 12px 25px; border: none; border-radius: 20px; cursor: pointer;">
+          Return to Alpha
+        </button>
+      </div>`;
+}
+  </script>
+</body>
+</html>
